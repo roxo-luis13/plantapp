@@ -7,7 +7,7 @@ dicas de cuidado (rega, luz, solo, toxicidade etc.) automaticamente.
 Feito 100% com serviços gratuitos:
 
 - **[Next.js](https://nextjs.org/)** (App Router) — hospedado grátis na [Vercel](https://vercel.com/).
-- **[Supabase](https://supabase.com/)** (plano free) — banco de dados Postgres, storage das fotos e autenticação por link mágico.
+- **[Supabase](https://supabase.com/)** (plano free) — banco de dados Postgres, storage das fotos e autenticação por e-mail e senha.
 - **[Pl@ntNet](https://my.plantnet.org/)** (API gratuita) — identificação da espécie a partir da foto.
 - **[Google Gemini](https://aistudio.google.com/apikey)** (API free tier) — geração das dicas de cuidado a partir do nome identificado.
 
@@ -28,9 +28,10 @@ No painel do Supabase, abra o **SQL Editor** e rode o conteúdo de
 - as políticas de RLS para que cada usuário só veja/edite suas próprias plantas;
 - o bucket de storage `plant-photos` (leitura pública, upload restrito ao dono).
 
-Também é necessário habilitar o login por e-mail (magic link), que já vem
-ativado por padrão em *Authentication → Providers → Email* nos novos
-projetos Supabase.
+Também é preciso desativar a confirmação por e-mail no cadastro, já que o
+login é feito só com e-mail e senha (sem depender do serviço de e-mail
+gratuito do Supabase, que tem um limite bem baixo de envios por hora): em
+*Authentication → Providers → Email*, desmarque **Confirm email**.
 
 ## 3. Configurar as variáveis de ambiente
 
@@ -47,8 +48,8 @@ npm install
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000), entre com seu e-mail
-(chega um link mágico de login) e comece a cadastrar plantas.
+Abra [http://localhost:3000](http://localhost:3000), clique em "Criar conta"
+na tela de login (e-mail + senha) e comece a cadastrar plantas.
 
 ## 5. Deploy gratuito
 
@@ -79,7 +80,7 @@ Abra [http://localhost:3000](http://localhost:3000), entre com seu e-mail
 src/
   app/
     page.tsx              # dashboard com o catálogo
-    login/                 # login por magic link
+    login/                 # login por e-mail e senha
     plants/new/             # formulário de cadastro (foto + identificação)
     plants/[id]/             # detalhe da planta + cuidados
     api/identify/            # rota que chama o Pl@ntNet
