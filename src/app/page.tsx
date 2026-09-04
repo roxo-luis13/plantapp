@@ -1,0 +1,63 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { PlantCard } from "@/components/PlantCard";
+import { signOut } from "./actions";
+import type { Plant } from "@/types/plant";
+
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: plants } = await supabase
+    .from("plants")
+    .select("*")
+    .order("purchase_date", { ascending: false })
+    .returns<Plant[]>();
+
+  return (
+    <div className="flex flex-1 flex-col bg-neutral-50">
+      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 sm:px-8">
+        <div>
+          <h1 className="text-lg font-semibold text-green-900">🌱 Meu Jardim</h1>
+          {user?.email && <p className="text-xs text-neutral-500">{user.email}</p>}
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/plants/new"
+            className="rounded-lg bg-green-700 px-3 py-2 text-sm font-medium text-white hover:bg-green-800"
+          >
+            + Nova planta
+          </Link>
+          <form action={signOut}>
+            <button type="submit" className="text-sm text-neutral-500 hover:text-neutral-800">
+              Sair
+            </button>
+          </form>
+        </div>
+      </header>
+
+      <main className="flex-1 px-4 py-6 sm:px-8">
+        {!plants || plants.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center">
+            <p className="text-neutral-600">Seu catálogo ainda está vazio.</p>
+            <Link
+              href="/plants/new"
+              className="rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800"
+            >
+              Cadastrar a primeira planta
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {plants.map((plant) => {
+              const { data } = supabase.storage.from("plant-photos").getPublicUrl(plant.photo_path);
+              return <PlantCard key={plant.id} plant={plant} photoUrl={data.publicUrl} />;
+            })}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
