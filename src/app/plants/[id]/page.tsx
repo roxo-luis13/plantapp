@@ -3,10 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AskPlantAI } from "@/components/AskPlantAI";
-import { CareInfoView } from "@/components/CareInfoView";
+import { CareSection } from "@/components/CareSection";
 import { DeletePlantButton } from "@/components/DeletePlantButton";
 import { EditablePlantName } from "@/components/EditablePlantName";
-import { RefreshCareInfoButton } from "@/components/RefreshCareInfoButton";
 import type { Plant } from "@/types/plant";
 
 export default async function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
@@ -60,29 +59,22 @@ export default async function PlantDetailPage({ params }: PageProps<"/plants/[id
           </p>
         )}
 
-        <section className="mt-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-green-900 dark:text-green-400">Cuidados</h2>
-            <RefreshCareInfoButton
-              plantId={plant.id}
-              name={plant.name}
-              scientificName={plant.scientific_name}
-            />
-          </div>
-          {plant.care_info ? (
-            <CareInfoView careInfo={plant.care_info} />
-          ) : (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Ainda não há dicas de cuidado geradas. Clique no botão acima para buscar com IA.
-            </p>
-          )}
-        </section>
+        <CareSection
+          plantId={plant.id}
+          name={plant.name}
+          scientificName={plant.scientific_name}
+          careInfo={plant.care_info}
+        />
 
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-semibold text-green-900 dark:text-green-400">
             Pergunte à IA
           </h2>
-          <AskPlantAI name={plant.name} scientificName={plant.scientific_name} />
+          <AskPlantAI
+            name={plant.name}
+            scientificName={plant.scientific_name}
+            photoUrl={photo.publicUrl}
+          />
         </section>
       </main>
     </div>

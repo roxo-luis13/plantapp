@@ -10,12 +10,21 @@ const SUGGESTED_QUESTIONS = [
   "Como ela se reproduz ou pode ser propagada?",
   "Quanto tempo em média ela vive?",
   "Ela floresce? Em que época do ano?",
-  "Alguma curiosidade interessante sobre ela?",
+  "Essa planta na foto parece saudável?",
+  "Tem algum sinal de doença ou praga visível na foto?",
 ];
 
 type QA = { question: string; answer: string };
 
-export function AskPlantAI({ name, scientificName }: { name: string; scientificName: string | null }) {
+export function AskPlantAI({
+  name,
+  scientificName,
+  photoUrl,
+}: {
+  name: string;
+  scientificName: string | null;
+  photoUrl: string;
+}) {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<QA[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,7 +40,7 @@ export function AskPlantAI({ name, scientificName }: { name: string; scientificN
       const response = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, scientificName, question: trimmed }),
+        body: JSON.stringify({ name, scientificName, question: trimmed, photoUrl }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -48,6 +57,10 @@ export function AskPlantAI({ name, scientificName }: { name: string; scientificN
 
   return (
     <div className="flex flex-col gap-3">
+      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+        A IA também enxerga a foto que você cadastrou, então pode perguntar sobre o que aparece nela.
+      </p>
+
       <div className="flex flex-wrap gap-2">
         {SUGGESTED_QUESTIONS.map((suggested) => (
           <button

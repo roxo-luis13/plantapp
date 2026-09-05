@@ -24,11 +24,27 @@ const CARE_INFO_SCHEMA = {
   ],
 };
 
+type GeminiPart = { text: string } | { inlineData: { mimeType: string; data: string } };
+
 function plantLabel(name: string, scientificName?: string | null) {
   return scientificName ? `${name} (${scientificName})` : name;
 }
 
-async function callGemini(prompt: string, responseSchema?: object): Promise<string> {
+async function fetchImageAsInlineData(url: string): Promise<GeminiPart | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
+    }
+    const mimeType = response.headers.get("content-type") || "image/jpeg";
+    const buffer = await response.arrayBuffer();
+    return { inlineData: { mimeType, data: Buffer.from(buffer).toString("base64") } };
+  } catch {
+    return null;
+  }
+}
+
+async function callGemini(parts: GeminiPart[], responseSchema?: object): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY não configurada.");
@@ -41,7 +57,7 @@ async function callGemini(prompt: string, responseSchema?: object): Promise<stri
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      contents: [{ role: "user", parts }],
       ...(responseSchema && {
         generationConfig: { responseMimeType: "application/json", responseSchema },
       }),
@@ -73,25 +89,37 @@ export async function getCareInfo(name: string, scientificName?: string | null):
 Escreva um guia de cuidados curto e prático, em português do Brasil, para a planta: ${plantLabel(name, scientificName)}.
 Preencha cada campo do JSON com 1 a 3 frases objetivas, sem markdown, focadas em quem tem a planta em casa.`;
 
-  const text = await callGemini(prompt, CARE_INFO_SCHEMA);
+  const text = await callGemini([{ text: prompt }], CARE_INFO_SCHEMA);
   return JSON.parse(text) as CareInfo;
 }
 
 /**
  * Responde a uma pergunta livre sobre uma planta específica (origem, usos,
- * curiosidades etc.), usando o Gemini.
+ * curiosidades etc.), usando o Gemini. Quando `photoUrl` é informado, a foto
+ * é enviada junto para permitir perguntas sobre a aparência dela na imagem.
  */
 export async function askAboutPlant(
   name: string,
   scientificName: string | null,
   question: string,
+  photoUrl?: string | null,
 ): Promise<string> {
   const prompt = `Você é um especialista em botânica e jardinagem. Responda em português do
 Brasil, de forma clara, objetiva e sem markdown, à pergunta abaixo sobre a planta
-"${plantLabel(name, scientificName)}". Se não tiver certeza de algo, diga isso em vez de inventar.
+"${plantLabel(name, scientificName)}"${photoUrl ? ", usando também a foto anexada quando ela ajudar a responder" : ""}.
+Se não tiver certeza de algo, diga isso em vez de inventar.
 
 Pergunta: ${question}`;
 
-  const text = await callGemini(prompt);
+  const parts: GeminiPart[] = [{ text: prompt }];
+
+  if (photoUrl) {
+    const image = await fetchImageAsInlineData(photoUrl);
+    if (image) {
+      parts.push(image);
+    }
+  }
+
+  const text = await callGemini(parts);
   return text.trim();
 }
