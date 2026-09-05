@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CareInfoView } from "@/components/CareInfoView";
 import { DeletePlantButton } from "@/components/DeletePlantButton";
+import { EditablePlantName } from "@/components/EditablePlantName";
 import { RefreshCareInfoButton } from "@/components/RefreshCareInfoButton";
 import type { Plant } from "@/types/plant";
 
@@ -41,10 +42,11 @@ export default async function PlantDetailPage({ params }: PageProps<"/plants/[id
           <Image src={photo.publicUrl} alt={plant.name} fill sizes="(min-width: 768px) 42rem, 100vw" className="object-cover" />
         </div>
 
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">{plant.name}</h1>
-        {plant.scientific_name && (
-          <p className="italic text-neutral-500 dark:text-neutral-400">{plant.scientific_name}</p>
-        )}
+        <EditablePlantName
+          plantId={plant.id}
+          name={plant.name}
+          scientificName={plant.scientific_name}
+        />
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Comprada em {purchaseDate}</p>
         {plant.identification_confidence != null && (
           <p className="text-xs text-neutral-400 dark:text-neutral-500">

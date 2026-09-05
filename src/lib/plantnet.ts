@@ -24,7 +24,7 @@ export async function identifyPlant(image: Blob, filename: string): Promise<Iden
   }
 
   const project = process.env.PLANTNET_PROJECT || "all";
-  const url = `${PLANTNET_ENDPOINT}/${project}?api-key=${apiKey}`;
+  const url = `${PLANTNET_ENDPOINT}/${project}?api-key=${apiKey}&lang=pt`;
 
   const form = new FormData();
   form.append("images", image, filename);

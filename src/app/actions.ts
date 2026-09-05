@@ -78,6 +78,35 @@ export async function deletePlant(plantId: string, photoPath: string) {
   redirect("/");
 }
 
+export type UpdatePlantNameState = { status: "idle" | "success" | "error"; message?: string };
+
+export async function updatePlantName(
+  plantId: string,
+  _prevState: UpdatePlantNameState,
+  formData: FormData,
+): Promise<UpdatePlantNameState> {
+  const name = String(formData.get("name") ?? "").trim();
+  const scientificName = String(formData.get("scientificName") ?? "").trim() || null;
+
+  if (!name) {
+    return { status: "error", message: "O nome não pode ficar vazio." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("plants")
+    .update({ name, scientific_name: scientificName })
+    .eq("id", plantId);
+
+  if (error) {
+    return { status: "error", message: `Falha ao salvar: ${error.message}` };
+  }
+
+  revalidatePath(`/plants/${plantId}`);
+  revalidatePath("/");
+  return { status: "success" };
+}
+
 export async function refreshCareInfo(plantId: string, name: string, scientificName: string | null) {
   const supabase = await createClient();
 
