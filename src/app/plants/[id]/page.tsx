@@ -1,11 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AskPlantAI } from "@/components/AskPlantAI";
 import { CareSection } from "@/components/CareSection";
 import { DeletePlantButton } from "@/components/DeletePlantButton";
 import { EditablePlantName } from "@/components/EditablePlantName";
+import { PageHeader } from "@/components/PageHeader";
 import type { Plant } from "@/types/plant";
 
 export default async function PlantDetailPage({ params }: PageProps<"/plants/[id]">) {
@@ -27,15 +27,7 @@ export default async function PlantDetailPage({ params }: PageProps<"/plants/[id
 
   return (
     <div className="flex flex-1 flex-col bg-neutral-50 dark:bg-neutral-950">
-      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900 sm:px-8">
-        <Link
-          href="/"
-          className="text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100"
-        >
-          ← Voltar
-        </Link>
-        <DeletePlantButton plantId={plant.id} photoPath={plant.photo_path} />
-      </header>
+      <PageHeader backHref="/" actions={<DeletePlantButton plantId={plant.id} photoPath={plant.photo_path} />} />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">
         <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-800">
