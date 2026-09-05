@@ -73,7 +73,7 @@ export default async function PlantDetailPage({ params }: PageProps<"/plants/[id
           <AskPlantAI
             name={plant.name}
             scientificName={plant.scientific_name}
-            photoUrl={photo.publicUrl}
+            photo={{ url: photo.publicUrl }}
           />
         </section>
       </main>

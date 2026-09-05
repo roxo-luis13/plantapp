@@ -93,28 +93,41 @@ Preencha cada campo do JSON com 1 a 3 frases objetivas, sem markdown, focadas em
   return JSON.parse(text) as CareInfo;
 }
 
+export type PlantPhotoInput = {
+  url?: string | null;
+  base64?: string | null;
+  mimeType?: string | null;
+};
+
 /**
- * Responde a uma pergunta livre sobre uma planta específica (origem, usos,
- * curiosidades etc.), usando o Gemini. Quando `photoUrl` é informado, a foto
- * é enviada junto para permitir perguntas sobre a aparência dela na imagem.
+ * Responde a uma pergunta livre sobre uma planta (origem, usos, curiosidades
+ * etc.), usando o Gemini. A foto pode vir de uma URL pública (planta já
+ * salva) ou já em base64 (foto ainda não enviada, ex: identificação rápida) —
+ * em ambos os casos ela é enviada junto para perguntas sobre a aparência
+ * dela na imagem. Sem nome identificado, a pergunta é feita sobre "a planta
+ * da foto anexada".
  */
 export async function askAboutPlant(
   name: string,
   scientificName: string | null,
   question: string,
-  photoUrl?: string | null,
+  photo?: PlantPhotoInput | null,
 ): Promise<string> {
+  const hasPhoto = Boolean(photo?.base64 || photo?.url);
+  const subject = name ? `a planta "${plantLabel(name, scientificName)}"` : "a planta que aparece na foto anexada";
+
   const prompt = `Você é um especialista em botânica e jardinagem. Responda em português do
-Brasil, de forma clara, objetiva e sem markdown, à pergunta abaixo sobre a planta
-"${plantLabel(name, scientificName)}"${photoUrl ? ", usando também a foto anexada quando ela ajudar a responder" : ""}.
+Brasil, de forma clara, objetiva e sem markdown, à pergunta abaixo sobre ${subject}${hasPhoto ? ", usando também a foto anexada quando ela ajudar a responder" : ""}.
 Se não tiver certeza de algo, diga isso em vez de inventar.
 
 Pergunta: ${question}`;
 
   const parts: GeminiPart[] = [{ text: prompt }];
 
-  if (photoUrl) {
-    const image = await fetchImageAsInlineData(photoUrl);
+  if (photo?.base64) {
+    parts.push({ inlineData: { mimeType: photo.mimeType || "image/jpeg", data: photo.base64 } });
+  } else if (photo?.url) {
+    const image = await fetchImageAsInlineData(photo.url);
     if (image) {
       parts.push(image);
     }

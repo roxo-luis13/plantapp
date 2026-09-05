@@ -15,15 +15,26 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 type QA = { question: string; answer: string };
+type PhotoSource = { url: string } | { file: File };
+
+async function fileToBase64(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
 
 export function AskPlantAI({
   name,
   scientificName,
-  photoUrl,
+  photo,
 }: {
-  name: string;
-  scientificName: string | null;
-  photoUrl: string;
+  name?: string;
+  scientificName?: string | null;
+  photo: PhotoSource;
 }) {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<QA[]>([]);
@@ -37,10 +48,23 @@ export function AskPlantAI({
     setLoading(true);
     setError(null);
     try {
+      const body: Record<string, unknown> = {
+        name: name ?? "",
+        scientificName: scientificName ?? null,
+        question: trimmed,
+      };
+
+      if ("url" in photo) {
+        body.photoUrl = photo.url;
+      } else {
+        body.photoBase64 = await fileToBase64(photo.file);
+        body.photoMimeType = photo.file.type || "image/jpeg";
+      }
+
       const response = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, scientificName, question: trimmed, photoUrl }),
+        body: JSON.stringify(body),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -58,7 +82,7 @@ export function AskPlantAI({
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs text-neutral-500 dark:text-neutral-400">
-        A IA também enxerga a foto que você cadastrou, então pode perguntar sobre o que aparece nela.
+        A IA também enxerga a foto, então pode perguntar sobre o que aparece nela.
       </p>
 
       <div className="flex flex-wrap gap-2">

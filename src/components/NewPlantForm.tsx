@@ -3,6 +3,8 @@
 import { useActionState, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { createPlant, type CreatePlantState } from "@/app/actions";
+import { useIdentifyPlant } from "@/hooks/useIdentifyPlant";
+import { IdentifyCandidates } from "@/components/IdentifyCandidates";
 import type { IdentificationCandidate } from "@/types/plant";
 
 const initialState: CreatePlantState = { status: "idle" };
@@ -14,50 +16,21 @@ function todayISO() {
 export function NewPlantForm() {
   const [state, formAction, pending] = useActionState(createPlant, initialState);
   const [preview, setPreview] = useState<string | null>(null);
-  const [candidates, setCandidates] = useState<IdentificationCandidate[]>([]);
-  const [identifying, setIdentifying] = useState(false);
-  const [identifyError, setIdentifyError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [scientificName, setScientificName] = useState("");
   const [confidence, setConfidence] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { candidates, identifying, error: identifyError, identify } = useIdentifyPlant();
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    setCandidates([]);
-    setIdentifyError(null);
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    } else {
-      setPreview(null);
-    }
+    setPreview(file ? URL.createObjectURL(file) : null);
   }
 
-  async function handleIdentify() {
+  function handleIdentify() {
     const file = fileInputRef.current?.files?.[0];
-    if (!file) {
-      setIdentifyError("Selecione uma foto primeiro.");
-      return;
-    }
-
-    setIdentifying(true);
-    setIdentifyError(null);
-    try {
-      const body = new FormData();
-      body.append("image", file);
-      const response = await fetch("/api/identify", { method: "POST", body });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error ?? "Não foi possível identificar a planta.");
-      }
-      setCandidates(data.candidates ?? []);
-      if (!data.candidates?.length) {
-        setIdentifyError("Nenhuma espécie reconhecida. Tente outra foto ou digite o nome manualmente.");
-      }
-    } catch (error) {
-      setIdentifyError(error instanceof Error ? error.message : "Erro ao identificar a planta.");
-    } finally {
-      setIdentifying(false);
+    if (file) {
+      identify(file);
     }
   }
 
@@ -102,34 +75,11 @@ export function NewPlantForm() {
           {identifyError && (
             <p className="mt-2 text-sm text-red-600 dark:text-red-400">{identifyError}</p>
           )}
-          {candidates.length > 0 && (
-            <ul className="mt-3 flex flex-col gap-2">
-              {candidates.map((candidate) => (
-                <li key={candidate.scientificName}>
-                  <button
-                    type="button"
-                    onClick={() => selectCandidate(candidate)}
-                    className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
-                      scientificName === candidate.scientificName
-                        ? "border-green-700 bg-green-50 dark:border-green-500 dark:bg-green-950"
-                        : "border-neutral-200 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
-                    }`}
-                  >
-                    <span className="font-medium italic">{candidate.scientificName}</span>
-                    {candidate.commonNames.length > 0 && (
-                      <span className="text-neutral-500 dark:text-neutral-400">
-                        {" "}
-                        — {candidate.commonNames.join(", ")}
-                      </span>
-                    )}
-                    <span className="ml-1 text-xs text-neutral-400 dark:text-neutral-500">
-                      ({Math.round(candidate.score * 100)}% de confiança)
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <IdentifyCandidates
+            candidates={candidates}
+            selectedScientificName={scientificName}
+            onSelect={selectCandidate}
+          />
         </div>
       )}
 
