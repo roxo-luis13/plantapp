@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AskPlantAI } from "@/components/AskPlantAI";
 import { CareInfoView } from "@/components/CareInfoView";
 import { DeletePlantButton } from "@/components/DeletePlantButton";
 import { EditablePlantName } from "@/components/EditablePlantName";
@@ -75,6 +76,13 @@ export default async function PlantDetailPage({ params }: PageProps<"/plants/[id
               Ainda não há dicas de cuidado geradas. Clique no botão acima para buscar com IA.
             </p>
           )}
+        </section>
+
+        <section className="mt-8">
+          <h2 className="mb-3 text-lg font-semibold text-green-900 dark:text-green-400">
+            Pergunte à IA
+          </h2>
+          <AskPlantAI name={plant.name} scientificName={plant.scientific_name} />
         </section>
       </main>
     </div>
