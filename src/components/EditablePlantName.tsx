@@ -56,14 +56,14 @@ export function EditablePlantName({
         required
         defaultValue={name}
         placeholder="Nome da planta"
-        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
       />
       <input
         type="text"
         name="scientificName"
         defaultValue={scientificName ?? ""}
         placeholder="Nome científico (opcional)"
-        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm italic text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base italic text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
       />
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       <div className="flex gap-2">

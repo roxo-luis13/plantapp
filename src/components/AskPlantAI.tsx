@@ -111,7 +111,7 @@ export function AskPlantAI({
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
           placeholder="Pergunte qualquer coisa sobre essa planta..."
-          className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+          className="flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
         />
         <button
           type="submit"
