@@ -70,7 +70,7 @@ export function NewPlantForm() {
   return (
     <form action={formAction} className="flex flex-col gap-5">
       <div>
-        <label className="mb-1 block text-sm font-medium text-neutral-700">
+        <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
           Foto da planta (no dia da compra)
         </label>
         <input
@@ -81,7 +81,7 @@ export function NewPlantForm() {
           capture="environment"
           required
           onChange={handleFileChange}
-          className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-green-700 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-green-800"
+          className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-green-700 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-green-800 dark:text-neutral-400 dark:file:bg-green-600 dark:hover:file:bg-green-500"
         />
         {preview && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -95,11 +95,13 @@ export function NewPlantForm() {
             type="button"
             onClick={handleIdentify}
             disabled={identifying}
-            className="rounded-lg border border-green-700 px-3 py-2 text-sm font-medium text-green-700 hover:bg-green-50 disabled:opacity-60"
+            className="rounded-lg border border-green-700 px-3 py-2 text-sm font-medium text-green-700 hover:bg-green-50 disabled:opacity-60 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950"
           >
             {identifying ? "Identificando..." : "🔎 Identificar planta com IA"}
           </button>
-          {identifyError && <p className="mt-2 text-sm text-red-600">{identifyError}</p>}
+          {identifyError && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400">{identifyError}</p>
+          )}
           {candidates.length > 0 && (
             <ul className="mt-3 flex flex-col gap-2">
               {candidates.map((candidate) => (
@@ -109,15 +111,18 @@ export function NewPlantForm() {
                     onClick={() => selectCandidate(candidate)}
                     className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                       scientificName === candidate.scientificName
-                        ? "border-green-700 bg-green-50"
-                        : "border-neutral-200 hover:bg-neutral-50"
+                        ? "border-green-700 bg-green-50 dark:border-green-500 dark:bg-green-950"
+                        : "border-neutral-200 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
                     }`}
                   >
                     <span className="font-medium italic">{candidate.scientificName}</span>
                     {candidate.commonNames.length > 0 && (
-                      <span className="text-neutral-500"> — {candidate.commonNames.join(", ")}</span>
+                      <span className="text-neutral-500 dark:text-neutral-400">
+                        {" "}
+                        — {candidate.commonNames.join(", ")}
+                      </span>
                     )}
-                    <span className="ml-1 text-xs text-neutral-400">
+                    <span className="ml-1 text-xs text-neutral-400 dark:text-neutral-500">
                       ({Math.round(candidate.score * 100)}% de confiança)
                     </span>
                   </button>
@@ -129,7 +134,7 @@ export function NewPlantForm() {
       )}
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-neutral-700">Nome da planta</label>
+        <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Nome da planta</label>
         <input
           type="text"
           name="name"
@@ -137,7 +142,7 @@ export function NewPlantForm() {
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Ex: Costela-de-adão"
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-green-600"
+          className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
         />
       </div>
 
@@ -145,33 +150,35 @@ export function NewPlantForm() {
       <input type="hidden" name="confidence" value={confidence ?? ""} />
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-neutral-700">Data de compra</label>
+        <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Data de compra</label>
         <input
           type="date"
           name="purchaseDate"
           required
           defaultValue={todayISO()}
           max={todayISO()}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-green-600"
+          className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-neutral-700">Notas (opcional)</label>
+        <label className="mb-1 block text-sm font-medium text-neutral-700 dark:text-neutral-300">Notas (opcional)</label>
         <textarea
           name="notes"
           rows={3}
           placeholder="Onde comprou, vaso usado, etc."
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-green-600"
+          className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-green-600 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:placeholder:text-neutral-500"
         />
       </div>
 
-      {state.status === "error" && <p className="text-sm text-red-600">{state.message}</p>}
+      {state.status === "error" && (
+        <p className="text-sm text-red-600 dark:text-red-400">{state.message}</p>
+      )}
 
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-60"
+        className="rounded-lg bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 disabled:opacity-60 dark:bg-green-600 dark:hover:bg-green-500"
       >
         {pending ? "Salvando..." : "Salvar planta"}
       </button>
