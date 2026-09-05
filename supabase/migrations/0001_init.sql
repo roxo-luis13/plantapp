@@ -1,8 +1,10 @@
 -- Catálogo de plantas: tabela principal, RLS e bucket de fotos.
+--
+-- Sem login: é um app de uso pessoal, então o acesso é aberto por trás da
+-- chave pública (anon) do projeto — não há distinção de usuário.
 
 create table if not exists public.plants (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
   name text not null,
   scientific_name text,
   purchase_date date not null,
@@ -14,27 +16,26 @@ create table if not exists public.plants (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists plants_user_id_idx on public.plants (user_id);
 create index if not exists plants_purchase_date_idx on public.plants (purchase_date desc);
 
 alter table public.plants enable row level security;
 
-create policy "Plants are visible to their owner"
+create policy "Plants are publicly readable"
   on public.plants for select
-  using (auth.uid() = user_id);
+  using (true);
 
-create policy "Plants are insertable by their owner"
+create policy "Plants are publicly insertable"
   on public.plants for insert
-  with check (auth.uid() = user_id);
+  with check (true);
 
-create policy "Plants are updatable by their owner"
+create policy "Plants are publicly updatable"
   on public.plants for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using (true)
+  with check (true);
 
-create policy "Plants are deletable by their owner"
+create policy "Plants are publicly deletable"
   on public.plants for delete
-  using (auth.uid() = user_id);
+  using (true);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -53,9 +54,7 @@ create trigger plants_set_updated_at
   for each row
   execute function public.set_updated_at();
 
--- Bucket de fotos. Fica público para leitura (as URLs das fotos ficam nos
--- cartões do catálogo), mas só o dono pode enviar/apagar dentro da sua
--- própria pasta ({user_id}/...).
+-- Bucket de fotos: leitura e escrita públicas (mesmo raciocínio acima).
 insert into storage.buckets (id, name, public)
 values ('plant-photos', 'plant-photos', true)
 on conflict (id) do nothing;
@@ -64,16 +63,10 @@ create policy "Plant photos are publicly readable"
   on storage.objects for select
   using (bucket_id = 'plant-photos');
 
-create policy "Users upload photos into their own folder"
+create policy "Anyone can upload plant photos"
   on storage.objects for insert
-  with check (
-    bucket_id = 'plant-photos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
+  with check (bucket_id = 'plant-photos');
 
-create policy "Users delete their own photos"
+create policy "Anyone can delete plant photos"
   on storage.objects for delete
-  using (
-    bucket_id = 'plant-photos'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
+  using (bucket_id = 'plant-photos');

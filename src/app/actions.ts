@@ -5,12 +5,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCareInfo } from "@/lib/gemini";
 
-export async function signOut() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/login");
-}
-
 export type CreatePlantState = { status: "idle" | "error"; message?: string };
 
 export async function createPlant(
@@ -18,13 +12,6 @@ export async function createPlant(
   formData: FormData,
 ): Promise<CreatePlantState> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { status: "error", message: "Sessão expirada. Faça login novamente." };
-  }
 
   const name = String(formData.get("name") ?? "").trim();
   const scientificName = String(formData.get("scientificName") ?? "").trim() || null;
@@ -41,7 +28,7 @@ export async function createPlant(
   const extension = photo instanceof File && photo.name.includes(".")
     ? photo.name.split(".").pop()
     : "jpg";
-  const photoPath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+  const photoPath = `${crypto.randomUUID()}.${extension}`;
 
   const { error: uploadError } = await supabase.storage
     .from("plant-photos")
@@ -61,7 +48,6 @@ export async function createPlant(
   const { data: inserted, error: insertError } = await supabase
     .from("plants")
     .insert({
-      user_id: user.id,
       name,
       scientific_name: scientificName,
       purchase_date: purchaseDate,
@@ -84,13 +70,6 @@ export async function createPlant(
 
 export async function deletePlant(plantId: string, photoPath: string) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
 
   await supabase.from("plants").delete().eq("id", plantId);
   await supabase.storage.from("plant-photos").remove([photoPath]);
@@ -101,13 +80,6 @@ export async function deletePlant(plantId: string, photoPath: string) {
 
 export async function refreshCareInfo(plantId: string, name: string, scientificName: string | null) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
 
   const careInfo = await getCareInfo(name, scientificName);
 

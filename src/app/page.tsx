@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PlantCard } from "@/components/PlantCard";
-import { signOut } from "./actions";
 import type { Plant } from "@/types/plant";
 
 export default async function Home() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const { data: plants } = await supabase
     .from("plants")
@@ -19,23 +15,13 @@ export default async function Home() {
   return (
     <div className="flex flex-1 flex-col bg-neutral-50">
       <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3 sm:px-8">
-        <div>
-          <h1 className="text-lg font-semibold text-green-900">🌱 Meu Jardim</h1>
-          {user?.email && <p className="text-xs text-neutral-500">{user.email}</p>}
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/plants/new"
-            className="rounded-lg bg-green-700 px-3 py-2 text-sm font-medium text-white hover:bg-green-800"
-          >
-            + Nova planta
-          </Link>
-          <form action={signOut}>
-            <button type="submit" className="text-sm text-neutral-500 hover:text-neutral-800">
-              Sair
-            </button>
-          </form>
-        </div>
+        <h1 className="text-lg font-semibold text-green-900">🌱 Meu Jardim</h1>
+        <Link
+          href="/plants/new"
+          className="rounded-lg bg-green-700 px-3 py-2 text-sm font-medium text-white hover:bg-green-800"
+        >
+          + Nova planta
+        </Link>
       </header>
 
       <main className="flex-1 px-4 py-6 sm:px-8">

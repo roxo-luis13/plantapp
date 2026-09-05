@@ -7,7 +7,7 @@ dicas de cuidado (rega, luz, solo, toxicidade etc.) automaticamente.
 Feito 100% com serviços gratuitos:
 
 - **[Next.js](https://nextjs.org/)** (App Router) — hospedado grátis na [Vercel](https://vercel.com/).
-- **[Supabase](https://supabase.com/)** (plano free) — banco de dados Postgres, storage das fotos e autenticação por e-mail e senha.
+- **[Supabase](https://supabase.com/)** (plano free) — banco de dados Postgres e storage das fotos.
 - **[Pl@ntNet](https://my.plantnet.org/)** (API gratuita) — identificação da espécie a partir da foto.
 - **[Google Gemini](https://aistudio.google.com/apikey)** (API free tier) — geração das dicas de cuidado a partir do nome identificado.
 
@@ -25,13 +25,12 @@ No painel do Supabase, abra o **SQL Editor** e rode o conteúdo de
 [`supabase/migrations/0001_init.sql`](./supabase/migrations/0001_init.sql). Isso cria:
 
 - a tabela `plants` (nome, nome científico, data de compra, foto, notas, cuidados em JSON);
-- as políticas de RLS para que cada usuário só veja/edite suas próprias plantas;
-- o bucket de storage `plant-photos` (leitura pública, upload restrito ao dono).
+- o bucket de storage `plant-photos` (leitura e escrita públicas);
+- políticas de RLS abertas — este é um app de uso pessoal, sem login.
 
-Também é preciso desativar a confirmação por e-mail no cadastro, já que o
-login é feito só com e-mail e senha (sem depender do serviço de e-mail
-gratuito do Supabase, que tem um limite bem baixo de envios por hora): em
-*Authentication → Providers → Email*, desmarque **Confirm email**.
+> ⚠️ Sem tela de login: qualquer pessoa com o link do app consegue ver e
+> editar o catálogo. Combina com o uso pretendido (só você usando), mas não
+> compartilhe a URL publicamente.
 
 ## 3. Configurar as variáveis de ambiente
 
@@ -48,8 +47,7 @@ npm install
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000), clique em "Criar conta"
-na tela de login (e-mail + senha) e comece a cadastrar plantas.
+Abra [http://localhost:3000](http://localhost:3000) e comece a cadastrar plantas.
 
 ## 5. Deploy gratuito
 
@@ -80,14 +78,13 @@ na tela de login (e-mail + senha) e comece a cadastrar plantas.
 src/
   app/
     page.tsx              # dashboard com o catálogo
-    login/                 # login por e-mail e senha
     plants/new/             # formulário de cadastro (foto + identificação)
     plants/[id]/             # detalhe da planta + cuidados
     api/identify/            # rota que chama o Pl@ntNet
     api/care/                # rota que chama o Gemini
     actions.ts               # server actions (criar/remover planta, cuidados)
   lib/
-    supabase/                # clientes Supabase (browser/server/middleware)
+    supabase/                # cliente Supabase (server-side)
     plantnet.ts               # integração Pl@ntNet
     gemini.ts                  # integração Gemini
   components/                  # UI (form, card, cuidados, botões)
