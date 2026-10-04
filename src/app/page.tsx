@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PlantCard } from "@/components/PlantCard";
+import { signOut } from "./actions";
 import type { Plant } from "@/types/plant";
 
 export default async function Home() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: plants } = await supabase
     .from("plants")
@@ -21,7 +25,9 @@ export default async function Home() {
           </span>
           <div className="leading-tight">
             <h1 className="text-lg font-semibold text-green-900 dark:text-green-400">Meu Jardim</h1>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">Catálogo de plantas</p>
+            {user?.email && (
+              <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">{user.email}</p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -37,6 +43,14 @@ export default async function Home() {
           >
             + Nova planta
           </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-lg px-2 py-2 text-sm text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100"
+            >
+              Sair
+            </button>
+          </form>
         </div>
       </header>
 
