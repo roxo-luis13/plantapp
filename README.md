@@ -2,14 +2,12 @@
 
 Catálogo pessoal de plantas: cadastre cada planta com foto do dia da compra,
 data de compra e nome. Uma IA identifica a espécie pela foto e outra gera
-dicas de cuidado (rega, luz, solo, toxicidade etc.) automaticamente. Cada
-pessoa que entra (com Google ou e-mail/senha) tem o próprio catálogo,
-isolado dos outros usuários.
+dicas de cuidado (rega, luz, solo, toxicidade etc.) automaticamente.
 
 Feito 100% com serviços gratuitos:
 
 - **[Next.js](https://nextjs.org/)** (App Router) — hospedado grátis na [Vercel](https://vercel.com/).
-- **[Supabase](https://supabase.com/)** (plano free) — banco de dados Postgres, storage das fotos e autenticação (Google + e-mail/senha).
+- **[Supabase](https://supabase.com/)** (plano free) — banco de dados Postgres e storage das fotos.
 - **[Pl@ntNet](https://my.plantnet.org/)** (API gratuita) — identificação da espécie a partir da foto.
 - **[Google Gemini](https://aistudio.google.com/apikey)** (API free tier) — geração das dicas de cuidado a partir do nome identificado.
 
@@ -23,45 +21,18 @@ Feito 100% com serviços gratuitos:
 
 ## 2. Configurar o banco de dados
 
-No painel do Supabase, abra o **SQL Editor** e rode, nessa ordem, o conteúdo de:
+No painel do Supabase, abra o **SQL Editor** e rode o conteúdo de
+[`supabase/migrations/0001_init.sql`](./supabase/migrations/0001_init.sql). Isso cria:
 
-1. [`supabase/migrations/0001_init.sql`](./supabase/migrations/0001_init.sql)
-2. [`supabase/migrations/0002_add_multi_user.sql`](./supabase/migrations/0002_add_multi_user.sql)
+- a tabela `plants` (nome, nome científico, data de compra, foto, notas, cuidados em JSON);
+- o bucket de storage `plant-photos` (leitura e escrita públicas);
+- políticas de RLS abertas — este é um app de uso pessoal, sem login.
 
-Isso cria:
+> ⚠️ Sem tela de login: qualquer pessoa com o link do app consegue ver e
+> editar o catálogo. Combina com o uso pretendido (só você usando), mas não
+> compartilhe a URL publicamente.
 
-- a tabela `plants` (dono, nome, nome científico, data de compra, foto, notas, cuidados em JSON);
-- o bucket de storage `plant-photos` (fotos públicas para leitura, upload/remoção restritos ao dono);
-- políticas de RLS: cada usuário só vê e edita as próprias plantas.
-
-## 3. Configurar o login
-
-### E-mail e senha
-
-Em **Authentication → Providers → Email**, desmarque **Confirm email**. Sem
-isso, criar conta depende do serviço de e-mail gratuito do Supabase, que
-tem um limite bem baixo de envios por hora.
-
-### Login com Google
-
-1. No [Google Cloud Console](https://console.cloud.google.com/), crie um
-   projeto (ou use um existente) e vá em **APIs & Services → Credentials**.
-2. **Create Credentials → OAuth client ID**, tipo **Web application**.
-3. Em **Authorized redirect URIs**, adicione a URL de callback que o
-   Supabase mostra em **Authentication → Providers → Google** (algo como
-   `https://<seu-projeto>.supabase.co/auth/v1/callback`).
-4. Copie o **Client ID** e o **Client Secret** gerados e cole em
-   **Authentication → Providers → Google** no Supabase, habilitando o provedor.
-
-### URL Configuration
-
-Em **Authentication → URL Configuration**:
-
-- **Site URL**: a URL onde o app está publicado (ex: `https://seu-app.vercel.app`).
-- **Redirect URLs**: adicione `https://seu-app.vercel.app/auth/callback` e,
-  para testar local, `http://localhost:3000/auth/callback`.
-
-## 4. Configurar as variáveis de ambiente
+## 3. Configurar as variáveis de ambiente
 
 Copie `.env.example` para `.env.local` e preencha com as chaves obtidas acima:
 
@@ -69,17 +40,16 @@ Copie `.env.example` para `.env.local` e preencha com as chaves obtidas acima:
 cp .env.example .env.local
 ```
 
-## 5. Rodar localmente
+## 4. Rodar localmente
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000), entre com Google ou
-crie uma conta com e-mail/senha, e comece a cadastrar plantas.
+Abra [http://localhost:3000](http://localhost:3000) e comece a cadastrar plantas.
 
-## 6. Deploy gratuito
+## 5. Deploy gratuito
 
 1. Suba o repositório no GitHub (já está feito, se você está lendo isso por aqui).
 2. Importe o projeto na [Vercel](https://vercel.com/new) (plano free).
@@ -98,18 +68,9 @@ crie uma conta com e-mail/senha, e comece a cadastrar plantas.
 
 ## Limites do plano gratuito
 
-- Pl@ntNet: 500 identificações/dia **no total**, somando todos os usuários —
-  é uma única API key compartilhada pelo app inteiro.
-- Gemini free tier: limite de requisições por minuto/dia, também compartilhado
-  entre todos os usuários da mesma API key.
-- Supabase free: 500 MB de banco e 1 GB de storage — dá para muitas plantas
-  com fotos comprimidas pelo celular, mas o projeto é pausado automaticamente
-  depois de um tempo sem uso (basta reativar no painel do Supabase quando
-  isso acontecer).
-
-> Com várias pessoas usando o app, essas cotas compartilhadas podem esgotar
-> rápido. Se isso virar um problema, vale considerar limitar quantas
-> identificações/perguntas cada usuário pode fazer por dia.
+- Pl@ntNet: 500 identificações/dia no plano gratuito.
+- Gemini free tier: limite de requisições por minuto/dia (suficiente para uso pessoal).
+- Supabase free: 500 MB de banco e 1 GB de storage — dá para milhares de plantas com fotos comprimidas pelo celular.
 
 ## Estrutura do projeto
 
@@ -117,20 +78,15 @@ crie uma conta com e-mail/senha, e comece a cadastrar plantas.
 src/
   app/
     page.tsx              # dashboard com o catálogo
-    login/                  # tela de login (Google + e-mail/senha)
-    auth/callback/           # troca o code do OAuth pela sessão
-    plants/new/               # formulário de cadastro (foto + identificação)
-    plants/[id]/               # detalhe da planta + cuidados
-    api/identify/              # rota que chama o Pl@ntNet
-    api/care/                  # rota que chama o Gemini
-    actions.ts                 # server actions (criar/remover planta, cuidados)
-  components/                  # UI (form, card, cuidados, botões)
+    plants/new/             # formulário de cadastro (foto + identificação)
+    plants/[id]/             # detalhe da planta + cuidados
+    api/identify/            # rota que chama o Pl@ntNet
+    api/care/                # rota que chama o Gemini
+    actions.ts               # server actions (criar/remover planta, cuidados)
   lib/
-    supabase/                  # clientes Supabase (browser/server/middleware)
-    plantnet.ts                 # integração Pl@ntNet
-    gemini.ts                    # integração Gemini
-  proxy.ts                        # protege as páginas, redireciona pra /login
-supabase/migrations/
-  0001_init.sql              # schema inicial
-  0002_add_multi_user.sql      # dono por planta + RLS por usuário
+    supabase/                # cliente Supabase (server-side)
+    plantnet.ts               # integração Pl@ntNet
+    gemini.ts                  # integração Gemini
+  components/                  # UI (form, card, cuidados, botões)
+supabase/migrations/0001_init.sql  # schema do banco
 ```
