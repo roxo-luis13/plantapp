@@ -26,6 +26,12 @@ export default async function Home() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            href="/jardim"
+            className="rounded-lg border border-green-700 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950"
+          >
+            📷 Jardim
+          </Link>
+          <Link
             href="/identificar"
             className="rounded-lg border border-green-700 px-3 py-2 text-sm font-medium text-green-700 transition hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950"
           >

@@ -28,3 +28,10 @@ export type IdentificationCandidate = {
   commonNames: string[];
   score: number;
 };
+
+export type GardenPhoto = {
+  id: string;
+  photo_path: string;
+  caption: string | null;
+  created_at: string;
+};
