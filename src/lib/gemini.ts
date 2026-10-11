@@ -136,3 +136,41 @@ Pergunta: ${question}`;
   const text = await callGemini(parts);
   return text.trim();
 }
+
+const PLANT_SEARCH_SCHEMA = {
+  type: "object",
+  properties: {
+    commonName: { type: "string" },
+    scientificName: { type: "string" },
+    description: { type: "string" },
+  },
+  required: ["commonName", "scientificName", "description"],
+};
+
+export type PlantSearchResult = {
+  commonName: string;
+  scientificName: string;
+  description: string;
+};
+
+/**
+ * Identifica uma planta a partir só de texto (nome, descrição ou pergunta),
+ * sem foto — usada na busca por palavras.
+ */
+export async function searchPlantByText(query: string): Promise<PlantSearchResult> {
+  const prompt = `Você é um especialista em botânica. Alguém está descrevendo ou
+nomeando uma planta em português do Brasil e quer saber qual é.
+
+Texto da pessoa: "${query}"
+
+Identifique a planta mais provável e responda em JSON com:
+- commonName: o nome popular mais comum dela em português do Brasil
+- scientificName: o nome científico (gênero e espécie)
+- description: 2 a 4 frases em português, sem markdown, descrevendo a planta
+  e respondendo ao que a pessoa descreveu ou perguntou.
+
+Se o texto já for só um nome, escreva mesmo assim uma descrição útil da planta.`;
+
+  const text = await callGemini([{ text: prompt }], PLANT_SEARCH_SCHEMA);
+  return JSON.parse(text) as PlantSearchResult;
+}
