@@ -107,6 +107,26 @@ export async function updatePlantName(
   return { status: "success" };
 }
 
+export type UpdatePlantNotesState = { status: "idle" | "success" | "error"; message?: string };
+
+export async function updatePlantNotes(
+  plantId: string,
+  _prevState: UpdatePlantNotesState,
+  formData: FormData,
+): Promise<UpdatePlantNotesState> {
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("plants").update({ notes }).eq("id", plantId);
+
+  if (error) {
+    return { status: "error", message: `Falha ao salvar: ${error.message}` };
+  }
+
+  revalidatePath(`/plants/${plantId}`);
+  return { status: "success" };
+}
+
 export async function refreshCareInfo(plantId: string, name: string, scientificName: string | null) {
   const supabase = await createClient();
 

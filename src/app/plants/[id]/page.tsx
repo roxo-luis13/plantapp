@@ -5,6 +5,7 @@ import { AskPlantAI } from "@/components/AskPlantAI";
 import { CareSection } from "@/components/CareSection";
 import { DeletePlantButton } from "@/components/DeletePlantButton";
 import { EditablePlantName } from "@/components/EditablePlantName";
+import { EditablePlantNotes } from "@/components/EditablePlantNotes";
 import { PageHeader } from "@/components/PageHeader";
 import type { Plant } from "@/types/plant";
 
@@ -45,11 +46,11 @@ export default async function PlantDetailPage({ params }: PageProps<"/plants/[id
             Identificada por IA com {Math.round(plant.identification_confidence * 100)}% de confiança
           </p>
         )}
-        {plant.notes && (
-          <p className="mt-4 whitespace-pre-wrap text-sm text-neutral-700 dark:text-neutral-300">
-            {plant.notes}
-          </p>
-        )}
+
+        <div className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+          <h2 className="text-sm font-semibold text-green-900 dark:text-green-400">Observações</h2>
+          <EditablePlantNotes plantId={plant.id} notes={plant.notes} />
+        </div>
 
         <CareSection
           plantId={plant.id}
