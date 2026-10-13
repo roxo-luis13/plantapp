@@ -19,11 +19,15 @@ export function EditablePlantName({
   function handleSubmit(formData: FormData) {
     setError(null);
     startTransition(async () => {
-      const result = await updatePlantName(plantId, { status: "idle" }, formData);
-      if (result.status === "error") {
-        setError(result.message ?? "Erro ao salvar.");
-      } else {
-        setEditing(false);
+      try {
+        const result = await updatePlantName(plantId, { status: "idle" }, formData);
+        if (result.status === "error") {
+          setError(result.message ?? "Erro ao salvar.");
+        } else {
+          setEditing(false);
+        }
+      } catch {
+        setError("Falha ao salvar. Verifique sua conexão e tente de novo.");
       }
     });
   }

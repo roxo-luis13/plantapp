@@ -21,13 +21,17 @@ export function GardenPhotoForm() {
     const formData = new FormData(event.currentTarget);
     setError(null);
     startTransition(async () => {
-      const result = await uploadGardenPhoto({ status: "idle" }, formData);
-      if (result.status === "error") {
-        setError(result.message ?? "Erro ao enviar a foto.");
-        return;
+      try {
+        const result = await uploadGardenPhoto({ status: "idle" }, formData);
+        if (result.status === "error") {
+          setError(result.message ?? "Erro ao enviar a foto.");
+          return;
+        }
+        formRef.current?.reset();
+        setPreview(null);
+      } catch {
+        setError("Falha ao enviar a foto. Tente uma foto menor ou verifique sua conexão.");
       }
-      formRef.current?.reset();
-      setPreview(null);
     });
   }
 
