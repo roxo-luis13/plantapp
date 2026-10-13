@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { uploadGardenPhoto } from "@/app/jardim/actions";
+import { compressImage } from "@/lib/compressImage";
 
 export function GardenPhotoForm() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -22,6 +23,10 @@ export function GardenPhotoForm() {
     setError(null);
     startTransition(async () => {
       try {
+        const photo = formData.get("photo");
+        if (photo instanceof File && photo.size > 0) {
+          formData.set("photo", await compressImage(photo));
+        }
         const result = await uploadGardenPhoto({ status: "idle" }, formData);
         if (result.status === "error") {
           setError(result.message ?? "Erro ao enviar a foto.");

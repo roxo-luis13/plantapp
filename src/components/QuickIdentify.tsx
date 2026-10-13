@@ -5,6 +5,7 @@ import type { ChangeEvent } from "react";
 import { AskPlantAI } from "@/components/AskPlantAI";
 import { IdentifyCandidates } from "@/components/IdentifyCandidates";
 import { useIdentifyPlant } from "@/hooks/useIdentifyPlant";
+import { compressImage } from "@/lib/compressImage";
 import type { IdentificationCandidate } from "@/types/plant";
 
 export function QuickIdentify() {
@@ -14,11 +15,11 @@ export function QuickIdentify() {
   const [selected, setSelected] = useState<IdentificationCandidate | null>(null);
   const { candidates, identifying, error, identify } = useIdentifyPlant();
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0] ?? null;
-    setFile(selectedFile);
     setSelected(null);
     setPreview(selectedFile ? URL.createObjectURL(selectedFile) : null);
+    setFile(selectedFile ? await compressImage(selectedFile) : null);
   }
 
   return (

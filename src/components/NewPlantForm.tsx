@@ -5,6 +5,7 @@ import type { ChangeEvent } from "react";
 import { createPlant, type CreatePlantState } from "@/app/actions";
 import { useIdentifyPlant } from "@/hooks/useIdentifyPlant";
 import { IdentifyCandidates } from "@/components/IdentifyCandidates";
+import { compressImage } from "@/lib/compressImage";
 import type { IdentificationCandidate } from "@/types/plant";
 
 const initialState: CreatePlantState = { status: "idle" };
@@ -22,9 +23,20 @@ export function NewPlantForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { candidates, identifying, error: identifyError, identify } = useIdentifyPlant();
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    setPreview(file ? URL.createObjectURL(file) : null);
+    if (!file) {
+      setPreview(null);
+      return;
+    }
+    setPreview(URL.createObjectURL(file));
+
+    const compressed = await compressImage(file);
+    if (compressed !== file && fileInputRef.current) {
+      const transfer = new DataTransfer();
+      transfer.items.add(compressed);
+      fileInputRef.current.files = transfer.files;
+    }
   }
 
   function handleIdentify() {
