@@ -127,6 +127,57 @@ export async function updatePlantNotes(
   return { status: "success" };
 }
 
+export type AddGrowthPhotoState = { status: "idle" | "error"; message?: string };
+
+export async function addGrowthPhoto(
+  plantId: string,
+  _prevState: AddGrowthPhotoState,
+  formData: FormData,
+): Promise<AddGrowthPhotoState> {
+  const supabase = await createClient();
+
+  const caption = String(formData.get("caption") ?? "").trim() || null;
+  const photo = formData.get("photo");
+
+  if (!(photo instanceof Blob) || photo.size === 0) {
+    return { status: "error", message: "Escolha uma foto." };
+  }
+
+  const extension = photo instanceof File && photo.name.includes(".")
+    ? photo.name.split(".").pop()
+    : "jpg";
+  const photoPath = `${plantId}/${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("plant-growth-photos")
+    .upload(photoPath, photo, { contentType: photo.type || "image/jpeg" });
+
+  if (uploadError) {
+    return { status: "error", message: `Falha ao enviar a foto: ${uploadError.message}` };
+  }
+
+  const { error: insertError } = await supabase
+    .from("plant_growth_photos")
+    .insert({ plant_id: plantId, photo_path: photoPath, caption });
+
+  if (insertError) {
+    await supabase.storage.from("plant-growth-photos").remove([photoPath]);
+    return { status: "error", message: `Falha ao salvar a foto: ${insertError.message}` };
+  }
+
+  revalidatePath(`/plants/${plantId}`);
+  return { status: "idle" };
+}
+
+export async function deleteGrowthPhoto(plantId: string, photoId: string, photoPath: string) {
+  const supabase = await createClient();
+
+  await supabase.from("plant_growth_photos").delete().eq("id", photoId);
+  await supabase.storage.from("plant-growth-photos").remove([photoPath]);
+
+  revalidatePath(`/plants/${plantId}`);
+}
+
 export async function refreshCareInfo(plantId: string, name: string, scientificName: string | null) {
   const supabase = await createClient();
 

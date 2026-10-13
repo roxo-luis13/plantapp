@@ -35,3 +35,11 @@ export type GardenPhoto = {
   caption: string | null;
   created_at: string;
 };
+
+export type GrowthPhoto = {
+  id: string;
+  plant_id: string;
+  photo_path: string;
+  caption: string | null;
+  created_at: string;
+};
