@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { HomeTips } from "@/components/HomeTips";
 import { PlantCard } from "@/components/PlantCard";
 import type { Plant } from "@/types/plant";
 
@@ -47,6 +48,8 @@ export default async function Home() {
       </header>
 
       <main className="flex-1 px-4 py-6 sm:px-8">
+        <HomeTips plants={plants ?? []} />
+
         {!plants || plants.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-white p-12 text-center dark:border-neutral-700 dark:bg-neutral-900">
             <p className="text-neutral-600 dark:text-neutral-400">Seu catálogo ainda está vazio.</p>

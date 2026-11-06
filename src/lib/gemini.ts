@@ -137,6 +137,67 @@ Pergunta: ${question}`;
   return text.trim();
 }
 
+const HOME_TIPS_SCHEMA = {
+  type: "object",
+  properties: {
+    tips: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          category: { type: "string", enum: ["rega", "poda", "cultivo", "alerta"] },
+          plantName: { type: "string" },
+          tip: { type: "string" },
+        },
+        required: ["category", "plantName", "tip"],
+      },
+    },
+  },
+  required: ["tips"],
+};
+
+export type HomeTip = {
+  category: "rega" | "poda" | "cultivo" | "alerta";
+  plantName: string;
+  tip: string;
+};
+
+export type HomeTipPlant = {
+  name: string;
+  scientificName: string | null;
+  notes: string | null;
+};
+
+/**
+ * Gera dicas práticas (rega, poda, cultivo) para a data de hoje, a partir das
+ * plantas que já estão cadastradas no catálogo do usuário.
+ */
+export async function getHomeTips(plants: HomeTipPlant[]): Promise<HomeTip[]> {
+  const today = new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+
+  const plantList = plants
+    .map((plant) => {
+      const label = plantLabel(plant.name, plant.scientificName);
+      return plant.notes ? `- ${label} (observações: ${plant.notes})` : `- ${label}`;
+    })
+    .join("\n");
+
+  const prompt = `Você é um especialista em jardinagem no Brasil. Hoje é ${today}.
+Essas são as plantas cadastradas no catálogo de alguém:
+${plantList}
+
+Dê de 3 a 6 dicas práticas e específicas em português do Brasil, considerando a época do ano
+no Brasil, sobre rega, poda e cultivo dessas plantas (use a categoria "alerta" só para avisos
+importantes, como risco de praga ou época de floração/dormência). Cada dica deve ser curta
+(1 a 2 frases), sem markdown, e indicar a qual planta do catálogo ela se aplica (campo
+plantName, usando o nome exatamente como está na lista acima). Priorize dicas relevantes
+para a época do ano atual.`;
+
+  const text = await callGemini([{ text: prompt }], HOME_TIPS_SCHEMA);
+  const parsed = JSON.parse(text) as { tips: HomeTip[] };
+  return parsed.tips;
+}
+
 const PLANT_SEARCH_SCHEMA = {
   type: "object",
   properties: {
