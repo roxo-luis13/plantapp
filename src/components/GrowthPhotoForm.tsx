@@ -8,13 +8,13 @@ import { compressImage } from "@/lib/compressImage";
 export function GrowthPhotoForm({ plantId }: { plantId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    setPreview(file ? URL.createObjectURL(file) : null);
+    const files = Array.from(event.target.files ?? []);
+    setPreviews(files.map((file) => URL.createObjectURL(file)));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -23,9 +23,10 @@ export function GrowthPhotoForm({ plantId }: { plantId: string }) {
     setError(null);
     startTransition(async () => {
       try {
-        const photo = formData.get("photo");
-        if (photo instanceof File && photo.size > 0) {
-          formData.set("photo", await compressImage(photo));
+        const photos = formData.getAll("photo").filter((p): p is File => p instanceof File && p.size > 0);
+        formData.delete("photo");
+        for (const photo of photos) {
+          formData.append("photo", await compressImage(photo));
         }
         const result = await addGrowthPhoto(plantId, { status: "idle" }, formData);
         if (result.status === "error") {
@@ -33,7 +34,7 @@ export function GrowthPhotoForm({ plantId }: { plantId: string }) {
           return;
         }
         formRef.current?.reset();
-        setPreview(null);
+        setPreviews([]);
       } catch {
         setError("Falha ao enviar a foto. Tente uma foto menor ou verifique sua conexão.");
       }
@@ -53,9 +54,16 @@ export function GrowthPhotoForm({ plantId }: { plantId: string }) {
           onChange={handleFileChange}
           className="block w-full text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-green-700 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-green-800 dark:text-neutral-400 dark:file:bg-green-600 dark:hover:file:bg-green-500"
         />
-        {preview && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="Pré-visualização" className="mt-3 h-32 w-32 rounded-lg object-cover" />
+        <p className="mt-1 text-xs text-neutral-400 dark:text-neutral-500">
+          Pode escolher mais de uma foto de uma vez, para registrar várias fases.
+        </p>
+        {previews.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {previews.map((src, index) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={index} src={src} alt="Pré-visualização" className="h-24 w-24 rounded-lg object-cover" />
+            ))}
+          </div>
         )}
       </div>
 

@@ -137,31 +137,38 @@ export async function addGrowthPhoto(
   const supabase = await createClient();
 
   const caption = String(formData.get("caption") ?? "").trim() || null;
-  const photo = formData.get("photo");
+  const photos = formData.getAll("photo").filter((p): p is File => p instanceof Blob && p.size > 0);
 
-  if (!(photo instanceof Blob) || photo.size === 0) {
-    return { status: "error", message: "Escolha uma foto." };
+  if (photos.length === 0) {
+    return { status: "error", message: "Escolha pelo menos uma foto." };
   }
 
-  const extension = photo instanceof File && photo.name.includes(".")
-    ? photo.name.split(".").pop()
-    : "jpg";
-  const photoPath = `${plantId}/${crypto.randomUUID()}.${extension}`;
+  const uploadedPaths: string[] = [];
+  for (const photo of photos) {
+    const extension = photo instanceof File && photo.name.includes(".")
+      ? photo.name.split(".").pop()
+      : "jpg";
+    const photoPath = `${plantId}/${crypto.randomUUID()}.${extension}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("plant-growth-photos")
-    .upload(photoPath, photo, { contentType: photo.type || "image/jpeg" });
+    const { error: uploadError } = await supabase.storage
+      .from("plant-growth-photos")
+      .upload(photoPath, photo, { contentType: photo.type || "image/jpeg" });
 
-  if (uploadError) {
-    return { status: "error", message: `Falha ao enviar a foto: ${uploadError.message}` };
+    if (uploadError) {
+      if (uploadedPaths.length === 0) {
+        return { status: "error", message: `Falha ao enviar a foto: ${uploadError.message}` };
+      }
+      break;
+    }
+    uploadedPaths.push(photoPath);
   }
 
   const { error: insertError } = await supabase
     .from("plant_growth_photos")
-    .insert({ plant_id: plantId, photo_path: photoPath, caption });
+    .insert(uploadedPaths.map((photoPath) => ({ plant_id: plantId, photo_path: photoPath, caption })));
 
   if (insertError) {
-    await supabase.storage.from("plant-growth-photos").remove([photoPath]);
+    await supabase.storage.from("plant-growth-photos").remove(uploadedPaths);
     return { status: "error", message: `Falha ao salvar a foto: ${insertError.message}` };
   }
 
