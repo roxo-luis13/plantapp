@@ -172,6 +172,8 @@ export type HomeTipPlant = {
  * Gera dicas práticas (rega, poda, cultivo) para a data de hoje, a partir das
  * plantas que já estão cadastradas no catálogo do usuário.
  */
+const HOME_TIPS_LOCATION = "Campinas, SP";
+
 export async function getHomeTips(plants: HomeTipPlant[]): Promise<HomeTip[]> {
   const today = new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
 
@@ -182,16 +184,17 @@ export async function getHomeTips(plants: HomeTipPlant[]): Promise<HomeTip[]> {
     })
     .join("\n");
 
-  const prompt = `Você é um especialista em jardinagem no Brasil. Hoje é ${today}.
-Essas são as plantas cadastradas no catálogo de alguém:
+  const prompt = `Você é um especialista em jardinagem. Hoje é ${today} e a pessoa mora em
+${HOME_TIPS_LOCATION}, Brasil. Essas são as plantas cadastradas no catálogo dela:
 ${plantList}
 
-Dê de 3 a 6 dicas práticas e específicas em português do Brasil, considerando a época do ano
-no Brasil, sobre rega, poda e cultivo dessas plantas (use a categoria "alerta" só para avisos
-importantes, como risco de praga ou época de floração/dormência). Cada dica deve ser curta
-(1 a 2 frases), sem markdown, e indicar a qual planta do catálogo ela se aplica (campo
-plantName, usando o nome exatamente como está na lista acima). Priorize dicas relevantes
-para a época do ano atual.`;
+Dê de 3 a 6 dicas práticas e específicas em português do Brasil, considerando o clima e a
+época do ano em ${HOME_TIPS_LOCATION} agora (temperatura, chuva, umidade típicas da região
+nesse período), sobre rega, poda e cultivo dessas plantas (use a categoria "alerta" só para
+avisos importantes, como risco de praga ou época de floração/dormência). Cada dica deve ser
+curta (1 a 2 frases), sem markdown, e indicar a qual planta do catálogo ela se aplica (campo
+plantName, usando o nome exatamente como está na lista acima). Priorize dicas relevantes para
+o clima local e a época do ano atual.`;
 
   const text = await callGemini([{ text: prompt }], HOME_TIPS_SCHEMA);
   const parsed = JSON.parse(text) as { tips: HomeTip[] };
